@@ -1,14 +1,52 @@
+<!DOCTYPE html>
 <html>
 <head>
     <title>EduPilot Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        .sidebar { height: 100vh; border-right: 1px solid #dee2e6; }
+        .nav-link { color: #333; font-weight: 500; }
+        .nav-link:hover { background-color: #f8f9fa; color: #2e7d32; }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-dark bg-success">
-        <a class="navbar-brand p-3" href="#">EduPilot Admin</a>
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">EduPilot Admin</a>
+            <a href="{% url 'logout' %}" class="btn btn-danger btn-sm">Logout</a>
+        </div>
     </nav>
-    <div class="container mt-4">
-        {% block content %}{% endblock %}
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-2 d-none d-md-block bg-light sidebar p-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin-dashboard/">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/edupilot_core/student/">Students</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/edupilot_core/teacher/">Teachers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/edupilot_core/staff/">Staff</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/edupilot_core/transaction/">Accounts</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Reports</a>
+                    </li>
+                </ul>
+            </nav>
+
+            <main class="col-md-10 ms-sm-auto px-md-4 mt-4">
+                {% block content %}
+                {% endblock %}
+            </main>
+        </div>
     </div>
 </body>
 </html>
