@@ -1,0 +1,87 @@
+{
+  "users": {
+    "admin": {
+      "id": "C3152234",
+      "name": "System Administrator",
+      "username": "admin",
+      "email": "admin@school.edu",
+      "password": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+      "role": "admin",
+      "active": true,
+      "created": "2026-04-10 17:49",
+      "created_by": "system"
+    },
+    "Naz": {
+      "name": "Areeba",
+      "username": "Naz",
+      "password": "Khan",
+      "role": "student",
+      "class": "4th",
+      "created": "2026-04-10 19:04"
+    },
+    "maryam": {
+      "name": "Maryam Naz Khan",
+      "username": "maryam",
+      "password": "123456",
+      "role": "student",
+      "class": "4th",
+      "created": "2026-04-10 19:26"
+    }
+  },
+  "classes": {},
+  "announcements": [],
+  "audit_log": [
+    {
+      "time": "2026-04-10 17:49",
+      "actor": "admin",
+      "action": "Logged in"
+    },
+    {
+      "time": "2026-04-10 18:42",
+      "actor": "admin",
+      "action": "Logged in"
+    },
+    {
+      "time": "2026-04-10 18:53",
+      "actor": "admin",
+      "action": "Logged in"
+    },
+    {
+      "time": "2026-04-10 19:05",
+      "actor": "admin",
+      "action": "Logged in"
+    },
+    {
+      "time": "2026-04-10 19:20",
+      "actor": "admin",
+      "action": "Logged in"
+    },
+    {
+      "time": "2026-04-10 19:27",
+      "actor": "admin",
+      "action": "Logged in"
+    },
+    {
+      "time": "2026-04-10 19:42",
+      "actor": "admin",
+      "action": "Logged in"
+    },
+    {
+      "time": "2026-04-10 19:59",
+      "actor": "admin",
+      "action": "Logged in"
+    },
+    {
+      "time": "2026-04-10 20:08",
+      "actor": "admin",
+      "action": "Logged in"
+    },
+    {
+      "time": "2026-06-17 18:19",
+      "actor": "admin",
+      "action": "Logged in"
+    }
+  ],
+  "fees": {},
+  "salary": {}
+}
