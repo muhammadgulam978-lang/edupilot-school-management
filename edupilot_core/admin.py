@@ -414,12 +414,13 @@ from django.contrib import admin
 from django.urls import path
 from django.shortcuts import redirect
 from django.contrib import messages
+from datetime import datetime
 from .services import FeeGenerationService
 from .models import (
     Scholarship, TransportRoute, User, Student, Transaction, Teacher, Staff, 
     StudentPerformance, FeeHead, FeePlan, FeePlanDetail, StudentFeeAssignment,
     StudentLedger, StudentBalance, FeeVoucher, FeeVoucherItem,
-    FeeGenerationSettings, NotificationQueue  # Naye models yahan hain
+    FeeGenerationSettings, NotificationQueue, FeeGenerationLog
 )
 
 # Registering User
@@ -436,6 +437,12 @@ class NotificationQueueAdmin(admin.ModelAdmin):
     list_display = ('student', 'notification_type', 'status', 'created_at')
     list_filter = ('status', 'notification_type', 'created_at')
     search_fields = ('student__full_name',)
+
+# Generation Logs Admin (Phase 7)
+@admin.register(FeeGenerationLog)
+class FeeGenerationLogAdmin(admin.ModelAdmin):
+    list_display = ('month', 'year', 'status', 'students_processed', 'success_count', 'failed_count', 'started_at')
+    list_filter = ('status', 'month', 'year')
 
 # Student Admin
 @admin.register(Student)
@@ -457,28 +464,26 @@ class TransactionAdmin(admin.ModelAdmin):
     list_display = ('title', 'amount', 'type', 'date')
     list_filter = ('type', 'date')
 
-# Teacher Admin
+# Teacher & Staff Admin
 @admin.register(Teacher)
 class TeacherAdmin(admin.ModelAdmin):
     list_display = ('name', 'employee_id', 'is_active')
     search_fields = ('name', 'employee_id')
     list_filter = ('is_active',)
 
-# Staff Admin
 @admin.register(Staff)
 class StaffAdmin(admin.ModelAdmin):
     list_display = ('name', 'role', 'is_active')
     search_fields = ('name', 'role')
     list_filter = ('is_active', 'role')
 
-# Fee Head Admin
+# Fee Head & Plan Admin
 @admin.register(FeeHead)
 class FeeHeadAdmin(admin.ModelAdmin):
     list_display = ('name', 'frequency', 'status')
     list_filter = ('frequency', 'status')
     search_fields = ('name',)
 
-# Fee Plan Admin
 @admin.register(FeePlan)
 class FeePlanAdmin(admin.ModelAdmin):
     list_display = ('name', 'class_name', 'session')
@@ -489,31 +494,28 @@ class FeePlanDetailAdmin(admin.ModelAdmin):
     list_display = ('fee_plan', 'fee_head', 'amount')
     list_filter = ('fee_plan', 'fee_head')
 
-# Transport Admin
+# Transport & Scholarship Admin
 @admin.register(TransportRoute)
 class TransportRouteAdmin(admin.ModelAdmin):
     list_display = ('route_name', 'amount')
 
-# Scholarship Admin
 @admin.register(Scholarship)
 class ScholarshipAdmin(admin.ModelAdmin):
     list_display = ('name', 'discount_type', 'value')
 
-# Student Fee Assignment Admin
+# Student Fee Assignment & Ledger Admin
 @admin.register(StudentFeeAssignment)
 class StudentFeeAssignmentAdmin(admin.ModelAdmin):
     list_display = ('student', 'fee_plan', 'transport_route', 'scholarship')
     list_filter = ('fee_plan', 'transport_route')
     search_fields = ('student__full_name',)
 
-# Student Ledger Admin
 @admin.register(StudentLedger)
 class StudentLedgerAdmin(admin.ModelAdmin):
     list_display = ('student', 'date', 'description', 'debit', 'credit', 'balance')
     list_filter = ('student', 'date')
     search_fields = ('student__full_name',)
 
-# Student Balance Admin
 @admin.register(StudentBalance)
 class StudentBalanceAdmin(admin.ModelAdmin):
     list_display = ('student', 'outstanding_amount')
@@ -541,10 +543,14 @@ class FeeVoucherAdmin(admin.ModelAdmin):
         return my_urls + urls
 
     def generate_fees_view(self, request):
-        from datetime import datetime
-        month = datetime.now().strftime("%B-%Y")
-        count = FeeGenerationService.generate_monthly_fees(month)
-        messages.success(request, f"{count} Vouchers generated and notifications queued successfully!")
+        now = datetime.now()
+        month = now.strftime("%B") # eg: June
+        year = now.year            # eg: 2026
+        
+        # Service call with both arguments
+        count = FeeGenerationService.generate_monthly_fees(month, year)
+        
+        messages.success(request, f"{count} Vouchers generated successfully for {month}-{year}!")
         return redirect('..')
 
 @admin.register(FeeVoucherItem)
