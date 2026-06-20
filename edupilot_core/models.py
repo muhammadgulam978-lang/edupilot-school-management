@@ -368,6 +368,163 @@
 
 
 # phase 7
+
+# from django.db import models
+# from django.contrib.auth.models import AbstractUser
+# from django.db.models.signals import post_save
+# from django.dispatch import receiver
+# from decimal import Decimal
+
+# # --- PHASE 0: CUSTOM USER MODEL ---
+# class User(AbstractUser):
+#     pass
+
+# # --- PHASE 1: FEE HEADS ---
+# class FeeHead(models.Model):
+#     FREQUENCY_CHOICES = [('one_time', 'One Time'), ('monthly', 'Monthly'), ('yearly', 'Yearly')]
+#     name = models.CharField(max_length=100)
+#     frequency = models.CharField(max_length=20, choices=FREQUENCY_CHOICES)
+#     status = models.BooleanField(default=True)
+
+#     def __str__(self):
+#         return f"{self.name} ({self.frequency})"
+
+# # --- PHASE 2: FEE PLANS ---
+# class FeePlan(models.Model):
+#     name = models.CharField(max_length=100)
+#     class_name = models.CharField(max_length=50)
+#     session = models.CharField(max_length=20)
+
+#     def __str__(self):
+#         return f"{self.name} - {self.class_name}"
+
+# class FeePlanDetail(models.Model):
+#     fee_plan = models.ForeignKey(FeePlan, on_delete=models.CASCADE)
+#     fee_head = models.ForeignKey(FeeHead, on_delete=models.CASCADE)
+#     amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+# # --- PHASE 3: TRANSPORT ---
+# class TransportRoute(models.Model):
+#     route_name = models.CharField(max_length=100)
+#     amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+#     def __str__(self):
+#         return self.route_name
+
+# # --- PHASE 4: SCHOLARSHIP ---
+# class Scholarship(models.Model):
+#     DISCOUNT_TYPES = [('percentage', 'Percentage'), ('fixed', 'Fixed Amount')]
+#     name = models.CharField(max_length=100)
+#     discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPES)
+#     value = models.DecimalField(max_digits=10, decimal_places=2)
+
+#     def __str__(self):
+#         return self.name
+
+# # --- CORE MODELS ---
+# class Student(models.Model):
+#     full_name = models.CharField(max_length=100)
+#     admission_number = models.CharField(max_length=50, unique=True)
+#     current_class = models.CharField(max_length=50)
+#     is_active = models.BooleanField(default=True)
+#     admission_date = models.DateField(auto_now_add=True)
+#     campus = models.CharField(max_length=50, blank=True)
+#     student_id = models.CharField(max_length=50, blank=True)
+
+#     def __str__(self):
+#         return self.full_name
+
+# # --- PHASE 5: STUDENT FEE ASSIGNMENT ---
+# class StudentFeeAssignment(models.Model):
+#     student = models.OneToOneField(Student, on_delete=models.CASCADE, related_name='fee_assignment')
+#     fee_plan = models.ForeignKey(FeePlan, on_delete=models.PROTECT)
+#     transport_route = models.ForeignKey(TransportRoute, on_delete=models.SET_NULL, null=True, blank=True)
+#     scholarship = models.ForeignKey(Scholarship, on_delete=models.SET_NULL, null=True, blank=True)
+
+# # --- PHASE 6: STUDENT LEDGER ---
+# class StudentLedger(models.Model):
+#     student = models.ForeignKey(Student, on_delete=models.CASCADE)
+#     date = models.DateField(auto_now_add=True)
+#     description = models.CharField(max_length=255)
+#     debit = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+#     credit = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+#     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+#     reference_no = models.CharField(max_length=50, blank=True, null=True)
+
+# # --- PHASE 7: PREVIOUS DUE SYSTEM ---
+# class StudentBalance(models.Model):
+#     student = models.OneToOneField(Student, on_delete=models.CASCADE)
+#     outstanding_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+# # --- PHASE 8: FEE VOUCHERS ---
+# class FeeVoucher(models.Model):
+#     STATUS_CHOICES = [('UNPAID', 'Unpaid'), ('PARTIAL', 'Partial'), ('PAID', 'Paid'), ('OVERDUE', 'Overdue')]
+#     voucher_no = models.CharField(max_length=50, unique=True)
+#     student = models.ForeignKey(Student, on_delete=models.CASCADE)
+#     month = models.CharField(max_length=20)
+#     issue_date = models.DateField()
+#     due_date = models.DateField()
+#     gross_amount = models.DecimalField(max_digits=10, decimal_places=2)
+#     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+#     fine = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+#     previous_due = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+#     net_amount = models.DecimalField(max_digits=10, decimal_places=2)
+#     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='UNPAID')
+
+# # --- PHASE 9: VOUCHER DETAILS ---
+# class FeeVoucherItem(models.Model):
+#     voucher = models.ForeignKey(FeeVoucher, on_delete=models.CASCADE, related_name='items')
+#     fee_head = models.ForeignKey(FeeHead, on_delete=models.CASCADE)
+#     amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+# # --- AUTOMATION SIGNALS ---
+# @receiver(post_save, sender=FeeVoucher)
+# def create_ledger_entry(sender, instance, created, **kwargs):
+#     if created:
+#         # 1. Ledger Entry
+#         StudentLedger.objects.create(
+#             student=instance.student,
+#             description=f"Fee Voucher Generated: {instance.voucher_no}",
+#             debit=instance.net_amount,
+#             balance=instance.net_amount,
+#             reference_no=instance.voucher_no
+#         )
+        
+#         # 2. Balance Update
+#         balance_obj, _ = StudentBalance.objects.get_or_create(student=instance.student)
+        
+#         # Explicit conversion to Decimal for safety
+#         current_outstanding = balance_obj.outstanding_amount or Decimal('0.00')
+#         new_net_amount = Decimal(str(instance.net_amount))
+        
+#         balance_obj.outstanding_amount = current_outstanding + new_net_amount
+#         balance_obj.save()
+
+# # --- OTHER MODELS ---
+# class Teacher(models.Model):
+#     name = models.CharField(max_length=100)
+#     employee_id = models.CharField(max_length=50)
+#     is_active = models.BooleanField(default=True)
+
+# class Staff(models.Model):
+#     name = models.CharField(max_length=100)
+#     role = models.CharField(max_length=50)
+#     is_active = models.BooleanField(default=True)
+
+# class StudentPerformance(models.Model):
+#     student = models.ForeignKey(Student, on_delete=models.CASCADE)
+#     attendance_percentage = models.FloatField()
+#     average_test_score = models.FloatField()
+#     risk_level = models.CharField(max_length=20)
+
+# class Transaction(models.Model):
+#     title = models.CharField(max_length=100)
+#     amount = models.DecimalField(max_digits=10, decimal_places=2)
+#     type = models.CharField(max_length=20)
+#     date = models.DateField()   
+
+
+# 10 email and notificatio
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_save
@@ -476,6 +633,25 @@ class FeeVoucherItem(models.Model):
     fee_head = models.ForeignKey(FeeHead, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
 
+# --- NEW MODELS FOR AUTOMATION & NOTIFICATIONS ---
+class FeeGenerationSettings(models.Model):
+    auto_enabled = models.BooleanField(default=False)
+    generation_day = models.PositiveIntegerField(default=1)
+    generation_time = models.TimeField(default="09:00:00")
+    send_notifications = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Auto Generation: {'Enabled' if self.auto_enabled else 'Disabled'}"
+
+class NotificationQueue(models.Model):
+    STATUS_CHOICES = (('PENDING', 'Pending'), ('SENT', 'Sent'), ('FAILED', 'Failed'))
+    
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    notification_type = models.CharField(max_length=10, choices=(('SMS', 'SMS'), ('EMAIL', 'Email')))
+    content = models.TextField()
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+
 # --- AUTOMATION SIGNALS ---
 @receiver(post_save, sender=FeeVoucher)
 def create_ledger_entry(sender, instance, created, **kwargs):
@@ -520,4 +696,4 @@ class Transaction(models.Model):
     title = models.CharField(max_length=100)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     type = models.CharField(max_length=20)
-    date = models.DateField()   
+    date = models.DateField()
