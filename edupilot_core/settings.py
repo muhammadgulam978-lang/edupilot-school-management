@@ -34,6 +34,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
+    'django_apscheduler',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
@@ -125,7 +126,10 @@ USE_TZ = True
 STATIC_URL = 'static/'
 AUTH_USER_MODEL = 'edupilot_core.User'
 
-# Media files configuration
+
+# settings.py
 import os
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media') # Ye ensure karein ke ye folder project ke main directory mein hai
