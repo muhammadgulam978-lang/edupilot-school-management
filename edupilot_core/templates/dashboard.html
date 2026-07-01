@@ -1,78 +1,290 @@
-{% extends 'base.html' %}
+{% extends "teacher_dashboard/bases.html" %}
+{% load static %}
+
+{% block title %}Teacher Dashboard{% endblock %}
 
 {% block content %}
-<div class="container-fluid mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Admin Dashboard</h2>
-        <a href="{% url 'register_student' %}" class="btn btn-primary">Add Student</a>
-    </div>
-
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-white bg-primary p-3 shadow">
-                <h5>Total Students</h5>
-                <h2>{{ total_students }}</h2>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-success p-3 shadow">
-                <h5>Monthly Revenue</h5>
-                <h2>{{ monthly_revenue }}</h2>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-dark bg-warning p-3 shadow">
-                <h5>Total Expenses</h5>
-                <h2>{{ total_expenses }}</h2>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card text-white bg-danger p-3 shadow">
-                <h5>High Risk Students</h5>
-                <h2>{{ high_risk_students }}</h2>
-            </div>
-        </div>
-    </div>
-
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card p-3 bg-light border">
-                <h5>Total Teachers</h5>
-                <h3>{{ total_teachers }}</h3>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card p-3 bg-light border">
-                <h5>Total Staff</h5>
-                <h3>{{ total_staff }}</h3>
-            </div>
-        </div>
-    </div>
-
-    <h4>Recent Transactions</h4>
-    <table class="table table-striped table-hover border">
-        <thead class="table-dark">
-            <tr>
-                <th>Title</th>
-                <th>Amount</th>
-                <th>Type</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for t in recent_transactions %}
-            <tr>
-                <td>{{ t.title }}</td>
-                <td>{{ t.amount }}</td>
-                <td>{{ t.type }}</td>
-                <td>{{ t.date }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="4" class="text-center">No transactions found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="page-titles">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="javascript:void(0)">Dashboard</a></li>
+    </ol>
 </div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h4 class="card-title mb-0">👨‍🏫 {{ teacher.name }} — Dashboard</h4>
+        <a href="{% url 'logout' %}" class="btn btn-sm btn-danger">Logout</a>
+    </div>
+
+    <div class="card-body">
+        <p><strong>Welcome, {{ teacher.name }}</strong></p>
+
+        <!-- ==================== TEACHER INFO SECTION ==================== -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title">👤 Personal Information</h5>
+                        <p><strong>Teacher ID:</strong> {{ teacher.teacher_id }}</p>
+                        <p><strong>Email:</strong> {{ teacher.email|default:"Not Assigned" }}</p>
+                        <p><strong>Phone:</strong> {{ teacher.phone|default:"Not Assigned" }}</p>
+                        <p><strong>Department:</strong> {{ teacher.department|default:"Not Assigned" }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title">💰 Salary Information</h5>
+                        <p><strong>Basic Salary:</strong> Rs. {{ teacher.basic_salary|floatformat:2 }}</p>
+                        <p><strong>House Allowance:</strong> Rs. {{ teacher.house_allowance|floatformat:2 }}</p>
+                        <p><strong>Medical Allowance:</strong> Rs. {{ teacher.medical_allowance|floatformat:2 }}</p>
+                        <p><strong>Status:</strong> 
+                            {% if teacher.is_active %}
+                                <span class="badge bg-success">✓ Active</span>
+                            {% else %}
+                                <span class="badge bg-danger">✗ Inactive</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== SALARY VOUCHERS SECTION ==================== -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">💵 Salary Vouchers</h5>
+            </div>
+            <div class="card-body">
+                {% if salary_vouchers %}
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle table-hover">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Month</th>
+                                    <th>Year</th>
+                                    <th>Net Salary</th>
+                                    <th>Status</th>
+                                    <th>Generated Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for voucher in salary_vouchers %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ voucher.month }}</td>
+                                    <td>{{ voucher.year }}</td>
+                                    <td><strong>Rs. {{ voucher.net_salary|floatformat:2 }}</strong></td>
+                                    <td>
+                                        {% if voucher.status == 'PAID' %}
+                                            <span class="badge bg-success">✓ PAID</span>
+                                        {% elif voucher.status == 'PARTIAL' %}
+                                            <span class="badge bg-warning">◐ PARTIAL</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">✗ UNPAID</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ voucher.generated_at|date:"d/m/Y" }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" onclick="alert('📥 PDF Download functionality coming soon')">📥 Download PDF</button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <strong>ℹ️ No salary vouchers generated yet.</strong> Salary vouchers are automatically generated on the scheduled date.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ==================== NOTIFICATIONS SECTION ==================== -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">🔔 Recent Notifications</h5>
+            </div>
+            <div class="card-body">
+                {% if notifications %}
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        {% for notif in notifications %}
+                            <div style="background: #f0f8ff; padding: 12px; margin: 8px 0; border-radius: 5px; border-left: 4px solid #2196F3;">
+                                <p style="margin: 0; color: #333; font-weight: 600;">📬 {{ notif.get_notification_type_display }}</p>
+                                <p style="margin: 5px 0 0 0; color: #666; font-size: 13px;">{{ notif.content }}</p>
+                                <p style="margin: 5px 0 0 0; color: #999; font-size: 11px;">
+                                    {% if notif.status == 'SENT' %}
+                                        ✅ Sent on {{ notif.created_at|date:"d/m/Y H:i" }}
+                                    {% elif notif.status == 'PENDING' %}
+                                        ⏳ Pending
+                                    {% else %}
+                                        ❌ Failed
+                                    {% endif %}
+                                </p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p style="color: #999; text-align: center; padding: 20px;">📭 No notifications yet</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ==================== AUTOMATION STATUS SECTION ==================== -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">⚙️ System Automation Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div style="background: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                            <p style="margin: 0; font-weight: 600; color: #333;">📋 Salary Generation</p>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 13px;">
+                                🟢 Automatic (30th of month, 6:00 PM)
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div style="background: #f0f8ff; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
+                            <p style="margin: 0; font-weight: 600; color: #333;">📧 Notifications</p>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 13px;">
+                                🟢 SMS/Email (Every 5 minutes)
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div style="background: #f0f8ff; padding: 15px; border-radius: 5px;">
+                            <p style="margin: 0; font-weight: 600; color: #333;">📄 PDF Vouchers</p>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 13px;">
+                                🟢 Auto-generated on salary creation
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div style="background: #f0f8ff; padding: 15px; border-radius: 5px;">
+                            <p style="margin: 0; font-weight: 600; color: #333;">💾 Real-time Updates</p>
+                            <p style="margin: 5px 0 0 0; color: #666; font-size: 13px;">
+                                🟢 Live salary calculations
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== COMMENTED OUT SECTIONS (KEPT FOR REFERENCE) ==================== -->
+        
+        <!-- 
+        LESSON PLANS SECTION - COMMENTED OUT
+        ==========================================
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">📚 Lesson Plans</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Total Lesson Plans:</strong> {{ lesson_plans|length }}</p>
+                {% if lesson_plans %}
+                    <ul>
+                        {% for plan in lesson_plans %}
+                            <li>{{ plan.title }} - {{ plan.date }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No lesson plans yet.</p>
+                {% endif %}
+            </div>
+        </div>
+        -->
+
+        <!-- 
+        ASSIGNED PERIODS SECTION - COMMENTED OUT
+        ============================================
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">📅 Assigned Periods</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Regular Classes:</strong></p>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <span class="badge bg-primary">Regular Classes</span>
+                    </li>
+                    <li class="mb-2">
+                        <span class="badge bg-info">Fixture Classes</span>
+                    </li>
+                </ul>
+                
+                {% comment %}
+                <p><strong>Total Assigned Periods:</strong> {{ assigned_periods|length }}</p>
+                
+                {% if assigned_periods %}
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Class</th>
+                                <th>Section</th>
+                                <th>Day</th>
+                                <th>Subject</th>
+                                <th>Period</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for period in assigned_periods %}
+                                <tr>
+                                    <td>{{ period.class_fk.class_name }}</td>
+                                    <td>{{ period.section.section_name }}</td>
+                                    <td>{{ period.day }}</td>
+                                    <td>{{ period.subject.name }}</td>
+                                    <td>{{ period.period_name }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No regular periods assigned.</p>
+                {% endif %}
+                
+                <p><strong>Total Fixture Assignments:</strong> {{ fixture_list|length }}</p>
+                
+                {% if fixture_list %}
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Class</th>
+                                <th>Section</th>
+                                <th>Period</th>
+                                <th>Date</th>
+                                <th>Absent Teacher</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in fixture_list %}
+                                <tr>
+                                    <td>{{ item.class_fk.class_name }}</td>
+                                    <td>{{ item.section.section_name }}</td>
+                                    <td>{{ item.period.period_name }}</td>
+                                    <td>{{ item.datedate|date:"d M Y" }}</td>
+                                    <td>{{ item.absent_teacher.name }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No fixture assignments right now.</p>
+                {% endif %}
+                {% endcomment %}
+            </div>
+        </div>
+        -->
+
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock %}
